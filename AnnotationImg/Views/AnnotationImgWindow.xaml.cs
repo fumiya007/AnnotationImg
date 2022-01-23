@@ -4,6 +4,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 
 namespace AnnotationImg.Views
 {
@@ -12,11 +13,21 @@ namespace AnnotationImg.Views
     /// </summary>
     public partial class AnnotationImgWindow : Window
     {
-        private AnnotationImg.Controls.BoundingBox newBox;
+        private BoundingBox newBox;
         
         public AnnotationImgWindow()
         {
             InitializeComponent();
+        }
+
+        private void canvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            AddBoundingBox(e);
+        }
+
+        private void canvas_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            RemoveIfSizeNotChanged();
         }
 
         private void canvas_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
@@ -26,14 +37,7 @@ namespace AnnotationImg.Views
             var point = e.GetPosition(canvas);
             var box = boxies.LastOrDefault(x => ToRectangle(x).Contains((int)point.X, (int)point.Y));
 
-            if (box is null)
-            {
-                AddBoundingBox(sender as Canvas, e);
-            }
-            else
-            {
-                canvas.Children.Remove(box);
-            }
+            if (box != null) canvas.Children.Remove(box);
         }
 
         private void canvas_MouseMove(object sender, MouseEventArgs e)
@@ -41,33 +45,32 @@ namespace AnnotationImg.Views
             ResizeBoundingBox(sender, e);
         }
 
-        private void canvas_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
-        {
-            if (newBox == null)
-                return;
-
-            RemoveIfSizeNotChanged(sender as Canvas, newBox);
-
-            newBox = null;
-        }
-
         /// <summary>
-        /// キャンバス上で右クリックした位置にBoundingBoxを生成します。
+        /// キャンバス上で左クリックした位置にBoundingBoxを生成します。
+        /// クリックした位置に既にBoundingBoxが存在する場合は処理を中止します。
         /// </summary>
-        private void AddBoundingBox(Canvas canvas, MouseButtonEventArgs e)
+        private void AddBoundingBox(MouseButtonEventArgs e)
         {
+            var boxies = canvas.Children.OfType<BoundingBox>();
+
+            var point = e.GetPosition(canvas);
+            if (boxies.Any(x => ToRectangle(x).Contains((int)point.X, (int)point.Y)))
+            {
+                return;
+            }
+
             newBox = new BoundingBox();
-            newBox.Width = 25;
-            newBox.Height = 25;
+            newBox.Width = 0d;
+            newBox.Height = 0d;
             canvas.Children.Add(newBox);
             Canvas.SetLeft(newBox, e.GetPosition(canvas).X);
             Canvas.SetTop(newBox, e.GetPosition(canvas).Y);
         }
 
-        private static System.Drawing.Rectangle ToRectangle(BoundingBox x)
+        private static System.Drawing.Rectangle ToRectangle(BoundingBox box)
         {
             return new System.Drawing.Rectangle(
-                (int)Canvas.GetLeft(x), (int)Canvas.GetTop(x), (int)x.ActualWidth, (int)x.ActualHeight);
+                (int)Canvas.GetLeft(box), (int)Canvas.GetTop(box), (int)box.ActualWidth, (int)box.ActualHeight);
         }
 
         /// <summary>
@@ -78,21 +81,45 @@ namespace AnnotationImg.Views
             if (newBox == null)
                 return;
 
-            if (e.RightButton == MouseButtonState.Released)
+            if (e.LeftButton == MouseButtonState.Released)
                 return;
 
-            var canvas = sender as Canvas;
-            newBox.Width = Math.Max(25, e.GetPosition(canvas).X - Canvas.GetLeft(newBox));
-            newBox.Height = Math.Max(25, e.GetPosition(canvas).Y - Canvas.GetTop(newBox));
+            newBox.Width = Math.Max(0, e.GetPosition(canvas).X - Canvas.GetLeft(newBox));
+            newBox.Height = Math.Max(0, e.GetPosition(canvas).Y - Canvas.GetTop(newBox));
         }
 
         /// <summary>
-        /// リサイズされなかった場合は生成したBoundingBoxを削除
+        /// 生成したBoundingBoxがリサイズされなかった場合は削除します。
         /// </summary>
-        private void RemoveIfSizeNotChanged(Canvas canvas, AnnotationImg.Controls.BoundingBox boundingBox)
+        private void RemoveIfSizeNotChanged()
         {
-            if (boundingBox.ActualWidth == 0 || newBox.ActualHeight == 0)
-                canvas.Children.Remove(boundingBox);
+            if (newBox == null)
+                return;
+
+            if (newBox.ActualWidth == 0 || newBox.ActualHeight == 0)
+                canvas.Children.Remove(newBox);
+
+            newBox = null;
+        }
+
+        private void window_MouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            if ((Keyboard.Modifiers & ModifierKeys.Control) != ModifierKeys.Control)
+                return;
+
+            var rate = e.Delta < 0 ? 0.9 : 1.1;
+            var scaleTransform = canvas.RenderTransform as ScaleTransform;
+            var scale = Math.Max(1d, scaleTransform.ScaleX * rate);
+
+            scaleTransform.ScaleX = scale;
+            scaleTransform.ScaleY = scale;
+        }
+
+        private void canvas_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            var scaleTransform = canvas.RenderTransform as ScaleTransform;
+            scaleTransform.ScaleX = 1d;
+            scaleTransform.ScaleY = 1d;
         }
     }
 }

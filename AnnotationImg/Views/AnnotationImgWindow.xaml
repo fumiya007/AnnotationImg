@@ -7,7 +7,8 @@
         xmlns:viewModel="clr-namespace:AnnotationImg.ViewModels"
         xmlns:bh="http://schemas.microsoft.com/xaml/behaviors"
         mc:Ignorable="d"
-        Title="AnnotationImgWindow" Height="800" Width="1200">
+        Title="AnnotationImgWindow" MinHeight="800" MinWidth="1200" SizeToContent="WidthAndHeight"
+        MouseWheel="window_MouseWheel">
     <Window.DataContext>
         <viewModel:AnnotationImgWindowViewModel/>
     </Window.DataContext>
@@ -17,61 +18,96 @@
                     Command="{Binding SelectNextImageSaveCommand}" 
                     CommandParameter="{Binding ElementName=canvas}"/>
     </Window.InputBindings>
-    <Grid>
+    <Window.Resources>
+        <Style TargetType="Button" >
+            <Setter Property="Height" Value="50" />
+            <Setter Property="Width" Value="150" />
+            <Setter Property="Margin" Value="0,10" />
+        </Style>
+    </Window.Resources>
+    <Grid Margin="10">
         <Grid.RowDefinitions>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="650" MaxHeight="650" />
-            <RowDefinition Height="70" MaxHeight="70" />
+            <RowDefinition Height="40"/>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="70" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="1050" MaxWidth="1050" />
-            <ColumnDefinition Width="*"/>
+            <ColumnDefinition MaxWidth="1050" />
+            <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
-        <StackPanel Grid.Row="0"
-                    Grid.Column="0"
-                    Grid.ColumnSpan="2"
-                    Margin="10,0,0,0">
+        <StackPanel Grid.Row="0" Grid.ColumnSpan="2"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Top" Height="32" Width="0">
             <TextBlock Text="{Binding FileCount}"/>
             <TextBlock Text="{Binding FileName}"/>
         </StackPanel>
-
-            <Canvas x:Name="canvas"
-                Grid.Column="0"
-                Grid.Row="1"
-                Margin="10,0,0,0"
-                MouseRightButtonDown="canvas_MouseRightButtonDown"
-                MouseRightButtonUp="canvas_MouseRightButtonUp"
-                MouseMove="canvas_MouseMove">
+        <Canvas x:Name="canvas"
+            Grid.Column="0"
+            Grid.Row="1"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            MouseRightButtonDown="canvas_MouseRightButtonDown"
+            MouseMove="canvas_MouseMove"
+            MouseLeftButtonDown="canvas_MouseLeftButtonDown"
+            MouseLeftButtonUp="canvas_MouseLeftButtonUp"
+            SizeChanged="canvas_SizeChanged"
+            Width="{Binding ElementName=image, Path=ActualWidth}"
+            Height="{Binding ElementName=image, Path=ActualHeight}">
+            <Canvas.RenderTransform>
+                <ScaleTransform />
+            </Canvas.RenderTransform>
             <Image x:Name="image"
-                   Panel.ZIndex="0"
-                   Source="{Binding Image}"
-                   MaxHeight="{Binding MaxImageControlHeight}"
-                   MaxWidth="{Binding MaxImageControlWidth}">
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Panel.ZIndex="0"
+            Source="{Binding Image}"
+            MaxHeight="{Binding MaxImageControlHeight}"
+            MaxWidth="{Binding MaxImageControlWidth}">
             </Image>
         </Canvas>
         <StackPanel
                Grid.Row="1"
-               Grid.Column="1">
-            <StackPanel.Resources>
-                <Style TargetType="Button" >
-                    <Setter Property="Height" Value="50" />
-                    <Setter Property="Margin" Value="10" />
-                </Style>
-            </StackPanel.Resources>
-            <StackPanel Height="75">
+               Grid.Column="1"
+               VerticalAlignment="Top">
+            <StackPanel HorizontalAlignment="Left">
                 <StackPanel.Resources>
-                    <Style TargetType="RadioButton" >
-                    <Setter Property="Margin" Value="5" />
+                    <Style TargetType="RadioButton">
+                        <Setter Property="Margin" Value="5" />
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="{x:Type RadioButton}">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Grid>
+                                            <Ellipse Width="16" Height="16" Fill="{TemplateBinding Background}"
+                             Stroke="{TemplateBinding BorderBrush}"
+                             StrokeThickness="{TemplateBinding BorderThickness}"/>
+                                            <Ellipse x:Name="Checked" Width="10" Height="10" Fill="Black" Visibility="Collapsed"/>
+                                        </Grid>
+                                        <Label Margin="5 0 0 0" Content="{TemplateBinding Content}"
+                       Foreground="{TemplateBinding Foreground}"
+                       Background="{TemplateBinding Background}"/>
+                                    </StackPanel>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsChecked" Value="True">
+                                            <Setter TargetName="Checked" Property="Visibility" Value="Visible"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
                     </Style>
                 </StackPanel.Resources>
                 <RadioButton x:Name="radioButtonAll"
                              Content="すべて"
-                             IsChecked="{Binding AllIsChecked}"/>
+                             Background="White"
+                             IsChecked="{Binding AllIsChecked}" />
                 <RadioButton x:Name="radioButtonUntreated"
                              Content="未処理"
+                             Background="White"
                              IsChecked="{Binding UntreatedIsChecked}"/>
                 <RadioButton x:Name="DRadioButtonTreated" 
                              Content="処理済"
+                             Background="White"
                              IsChecked="{Binding TreatedIsChecked}"/>
             </StackPanel>
             <Button Content="次へ"
@@ -87,21 +123,18 @@
                     Command="{Binding SelectFolderCommand}"
                     CommandParameter="{Binding ElementName=canvas}"/>
         </StackPanel>
-        <Button Content="保存して次へ"
-                Grid.Row="2"
-                Grid.Column="0"
-                Width="200"
-                Margin="10"
-                HorizontalAlignment="Right"
-                Command="{Binding SelectNextImageSaveCommand}" 
-                CommandParameter="{Binding ElementName=canvas}"/>
-        <Button Content="出力"
-                Grid.Row="2"
-                Grid.Column="2"
-                Width="100"
-                Margin="10"
-                HorizontalAlignment="Right"
+        <StackPanel 
+            Orientation="Horizontal"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Top"
+            Grid.Row="2" Grid.ColumnSpan="2" Height="50">
+            <Button Content="保存して次へ"
+                    Margin="0,0,10,0"
+                    Command="{Binding SelectNextImageSaveCommand}" 
+                    CommandParameter="{Binding ElementName=canvas}"/>
+            <Button Content="出力"
+                    Margin="0,0,0,0"
                 Command="{Binding ExportFileCommand}" />
-
+        </StackPanel>
     </Grid>
 </Window>
