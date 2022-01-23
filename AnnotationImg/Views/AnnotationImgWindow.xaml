@@ -35,9 +35,12 @@
             <ColumnDefinition MaxWidth="1050" />
             <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
-        <StackPanel Grid.Row="0" Grid.ColumnSpan="2"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Top" Height="32" Width="0">
+        <StackPanel Grid.Row="0"
+                    Grid.Column="0"
+                    Grid.ColumnSpan="2"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    Margin="10,0,0,0">
             <TextBlock Text="{Binding FileCount}"/>
             <TextBlock Text="{Binding FileName}"/>
         </StackPanel>
