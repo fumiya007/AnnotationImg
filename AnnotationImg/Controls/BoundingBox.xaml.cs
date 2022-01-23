@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AnnotationImg.Utils;
+using System;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 
@@ -48,9 +49,9 @@ namespace AnnotationImg.Controls
             Image image = getImage();
 
             double width = Math.Min(ActualWidth + e.HorizontalChange, image.ActualWidth - Canvas.GetLeft(this));
-            Width = Math.Max(width, 10);
+            Width = Math.Max(width, Consts.BOUNDING_BOX_MIN_SIZE);
             double height = Math.Min(ActualHeight + e.VerticalChange, image.ActualHeight - Canvas.GetTop(this));
-            Height = Math.Max(height, 10);
+            Height = Math.Max(height, Consts.BOUNDING_BOX_MIN_SIZE);
         }
 
         private void onRisizeStarted(object sender, DragStartedEventArgs e)

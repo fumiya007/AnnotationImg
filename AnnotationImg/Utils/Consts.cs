@@ -13,5 +13,9 @@ namespace AnnotationImg.Utils
         /// 中間ファイル名
         /// </summary>
         public const string INTERMEDIATE_FILE_NAME = "{0}.json";
+        /// <summary>
+        /// BoundingBox最小サイズ
+        /// </summary>
+        public const double BOUNDING_BOX_MIN_SIZE = 30d;
     }
 }

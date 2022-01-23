@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using AnnotationImg.Utils;
 
 namespace AnnotationImg.Views
 {
@@ -60,8 +61,8 @@ namespace AnnotationImg.Views
             }
 
             newBox = new BoundingBox();
-            newBox.Width = 0d;
-            newBox.Height = 0d;
+            newBox.Width = Consts.BOUNDING_BOX_MIN_SIZE;
+            newBox.Height = Consts.BOUNDING_BOX_MIN_SIZE;
             canvas.Children.Add(newBox);
             Canvas.SetLeft(newBox, e.GetPosition(canvas).X);
             Canvas.SetTop(newBox, e.GetPosition(canvas).Y);
@@ -84,8 +85,8 @@ namespace AnnotationImg.Views
             if (e.LeftButton == MouseButtonState.Released)
                 return;
 
-            newBox.Width = Math.Max(0, e.GetPosition(canvas).X - Canvas.GetLeft(newBox));
-            newBox.Height = Math.Max(0, e.GetPosition(canvas).Y - Canvas.GetTop(newBox));
+            newBox.Width = Math.Max(Consts.BOUNDING_BOX_MIN_SIZE, e.GetPosition(canvas).X - Canvas.GetLeft(newBox));
+            newBox.Height = Math.Max(Consts.BOUNDING_BOX_MIN_SIZE, e.GetPosition(canvas).Y - Canvas.GetTop(newBox));
         }
 
         /// <summary>
